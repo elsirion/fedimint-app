@@ -9,10 +9,10 @@ build-linux:
   $ROOT/scripts/build-linux.sh release-dev
 
 build-debug-android *args:
-  $ROOT/docker/build-apk.sh debug {{args}}
+  $ROOT/scripts/build-android-nix.sh debug {{args}}
 
 build-release-android *args:
-  $ROOT/docker/build-apk.sh release {{args}}
+  $ROOT/scripts/build-android-nix.sh release {{args}}
 
 build-appimage:
   $ROOT/docker/build-appimage.sh

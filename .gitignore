@@ -58,3 +58,6 @@ AppDir/
 
 # Flutter gen_l10n output
 lib/generated/
+
+# Local Gradle cache used by the Nix Android build
+/.gradle/
