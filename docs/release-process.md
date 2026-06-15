@@ -29,6 +29,65 @@
 - Push: `git push upstream releases/vX.Y && git push upstream vX.Y.Z`
 - Verify GitHub release created with APK and AppImage
 
+## Android App Bundle Signing
+
+Nix can build the release App Bundle without a signing key:
+
+```bash
+nix build .#aab
+```
+
+The unsigned bundle is written to:
+
+```text
+result/ecashapp-release-unsigned.aab
+```
+
+Keep release/upload keys out of git and out of `flake.nix`. Sign the bundle as
+a separate release step with a key from your release secret store. For Google
+Play App Signing, this should normally be your Play upload key, not the final
+app signing key.
+
+Create an upload key once if you do not already have one:
+
+```bash
+nix develop -c keytool -genkeypair \
+  -keystore upload-keystore.p12 \
+  -storetype PKCS12 \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 10000 \
+  -alias upload
+```
+
+Copy the Nix-built AAB out of the read-only Nix store, then sign the copy:
+
+```bash
+mkdir -p dist
+cp --no-preserve=mode result/ecashapp-release-unsigned.aab \
+  dist/ecashapp-release-signed.aab
+```
+
+```bash
+nix develop -c jarsigner \
+  -sigalg SHA256withRSA \
+  -digestalg SHA-256 \
+  -keystore upload-keystore.p12 \
+  -storetype PKCS12 \
+  dist/ecashapp-release-signed.aab \
+  upload
+```
+
+Verify the signed bundle:
+
+```bash
+nix develop -c jarsigner -verify -verbose -certs \
+  dist/ecashapp-release-signed.aab
+```
+
+If signing in CI, provide the keystore and passwords via CI secrets or a secret
+manager and write them only to temporary files during the signing job.
+
 ## Post-Release
 
 - Add branch protection to `releases/vX.Y` (first release only)
